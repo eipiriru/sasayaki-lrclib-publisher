@@ -1,4 +1,4 @@
-# LRCLIB Publisher
+# Sasayaki LRCLIB Publisher
 
 Web tool untuk memublikasikan plain lyrics dan synced lyrics (LRC) ke [LRCLIB](https://lrclib.net/).
 
