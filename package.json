@@ -1,0 +1,23 @@
+{
+  "name": "lrclib-publisher",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal web publisher tool for LRCLIB with built-in server proxy to bypass browser CORS.",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node server-proxy.mjs"
+  },
+  "keywords": [
+    "lrclib",
+    "lyrics",
+    "lrc",
+    "proof-of-work"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

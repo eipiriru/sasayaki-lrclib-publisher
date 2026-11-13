@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yoruuta LRCLIB Publisher</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b1020; --panel: #121a2e; --panel2: #18233b;
+    --text: #edf2ff; --muted: #9aa8c3; --line: #293752;
+    --accent: #8b9cff; --accent2: #6578f5; --good: #45d6a0;
+    --warn: #f5c56b; --bad: #ff7e8a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; padding: 36px 18px;
+    background: radial-gradient(ellipse at 15% 0%, #1a2850 0, transparent 42%), var(--bg);
+    color: var(--text); font: 15px/1.55 system-ui, -apple-system, Segoe UI, sans-serif;
+  }
+  .wrap { max-width: 900px; margin: auto; }
+  header { margin-bottom: 24px; }
+  .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .14em; font-size: 11px; font-weight: 800; }
+  h1 { margin: 7px 0 5px; font-size: clamp(28px, 5vw, 40px); letter-spacing: -.04em; }
+  .sub { color: var(--muted); margin: 0; max-width: 680px; }
+  .card {
+    background: linear-gradient(160deg, rgba(24,35,59,.96), rgba(18,26,46,.98));
+    border: 1px solid var(--line); border-radius: 18px; padding: 22px;
+    box-shadow: 0 18px 55px rgba(0,0,0,.22); margin: 16px 0;
+  }
+  .section-title { font-size: 16px; margin: 0 0 16px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { min-width: 0; }
+  .field.full { grid-column: 1 / -1; }
+  label { display: block; font-size: 13px; font-weight: 700; margin: 0 0 7px; color: #dce5ff; }
+  input, textarea {
+    width: 100%; border: 1px solid #34435f; border-radius: 10px;
+    background: #0d1528; color: var(--text); padding: 11px 12px;
+    font: inherit; outline: none; transition: border .15s, box-shadow .15s;
+  }
+  input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,156,255,.13); }
+  textarea { min-height: 170px; resize: vertical; font: 13px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; }
+  .hint { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  button {
+    border: 0; border-radius: 10px; padding: 11px 16px; cursor: pointer;
+    color: #0b1020; background: var(--accent); font: 700 14px system-ui;
+    transition: transform .12s, opacity .12s, background .12s;
+  }
+  button:hover:not(:disabled) { transform: translateY(-1px); background: #aab6ff; }
+  button.secondary { background: #293752; color: var(--text); }
+  button.secondary:hover:not(:disabled) { background: #354766; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .status { display: flex; gap: 10px; align-items: flex-start; padding: 13px 14px; border-radius: 11px; background: #0d1528; border: 1px solid var(--line); }
+  .dot { width: 9px; height: 9px; flex: 0 0 9px; margin-top: 6px; border-radius: 50%; background: var(--muted); }
+  .status[data-kind="working"] .dot { background: var(--warn); box-shadow: 0 0 0 4px rgba(245,197,107,.12); }
+  .status[data-kind="success"] .dot { background: var(--good); }
+  .status[data-kind="error"] .dot { background: var(--bad); }
+  #statusText { white-space: pre-wrap; overflow-wrap: anywhere; }
+  #matches { margin-top: 12px; }
+  .match { padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; margin-top: 8px; background: rgba(13,21,40,.7); }
+  .match strong { display: block; }
+  .match small { color: var(--muted); }
+  .match a { color: var(--accent); font-size: 12px; }
+  .progress { height: 5px; background: #26334c; border-radius: 99px; overflow: hidden; margin-top: 12px; display: none; }
+  .progress > div { height: 100%; width: 35%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite alternate; }
+  @keyframes pulse { from { transform: translateX(-70%); } to { transform: translateX(220%); } }
+  .note { color: var(--muted); font-size: 12px; margin-top: 18px; }
+  code { color: #c8d1ff; background: #0d1528; padding: 2px 5px; border-radius: 5px; }
+  @media (max-width: 650px) { body { padding: 24px 12px; } .card { padding: 16px; } .grid { grid-template-columns: 1fr; } .field.full { grid-column: auto; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Community lyrics contribution</div>
+    <h1>LRCLIB Publisher</h1>
+    <p class="sub">Publikasikan plain lyrics dan timestamped LRC ke database LRCLIB. Tidak membutuhkan akun atau API key.</p>
+  </header>
+
+  <form id="publishForm">
+    <section class="card">
+      <h2 class="section-title">01 — Informasi lagu</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="trackName">Judul lagu *</label>
+          <input id="trackName" name="trackName" required placeholder="Contoh: Haru">
+        </div>
+        <div class="field">
+          <label for="artistName">Artis *</label>
+          <input id="artistName" name="artistName" required placeholder="Contoh: Yorushika">
+        </div>
+        <div class="field">
+          <label for="albumName">Album *</label>
+          <input id="albumName" name="albumName" required placeholder="Nama album">
+        </div>
+        <div class="field">
+          <label for="duration">Durasi (detik) *</label>
+          <input id="duration" name="duration" type="number" min="1" step="0.01" required placeholder="Contoh: 240">
+          <p class="hint">Masukkan durasi audio dalam detik, bukan milidetik.</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="secondary" id="checkBtn">Cari duplikasi di LRCLIB</button>
+      </div>
+      <div id="matches" aria-live="polite"></div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">02 — Lirik</h2>
+      <div class="grid">
+        <div class="field full">
+          <label for="lrcFile">Upload file LRC</label>
+          <input id="lrcFile" type="file" accept=".lrc,text/plain">
+          <p class="hint" id="lrcFileStatus">Pilih file .lrc untuk mengisi synced lyrics dan plain lyrics otomatis.</p>
+        </div>
+        <div class="field full">
+          <label for="plainLyrics">Plain lyrics</label>
+          <textarea id="plainLyrics" spellcheck="false" placeholder="Lirik tanpa timestamp..."></textarea>
+        </div>
+        <div class="field full">
+          <label for="syncedLyrics">Synced lyrics (LRC)</label>
+          <textarea id="syncedLyrics" spellcheck="false" placeholder="[00:12.00]Baris lirik pertama&#10;[00:16.50]Baris lirik kedua"></textarea>
+          <p class="hint">Format timestamp standar: [mm:ss.xx] atau [mm:ss.xxx]. Minimal isi salah satu jenis lirik.</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="secondary" id="deriveBtn">Buat plain lyrics dari LRC</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">03 — Publikasi</h2>
+      <div class="status" id="status" data-kind="idle">
+        <span class="dot"></span>
+        <div id="statusText">Siap. Lengkapi metadata dan lirik sebelum melakukan publikasi.</div>
+      </div>
+      <div class="progress" id="progress"><div></div></div>
+      <div class="actions">
+        <button type="submit" id="publishBtn">Request challenge & publish</button>
+        <button type="reset" class="secondary" id="resetBtn">Reset form</button>
+      </div>
+      <p class="note">
+        Saat publikasi, halaman akan meminta challenge baru, mencari nonce melalui SHA-256 Proof of Work,
+        lalu mengirim token satu kali ke LRCLIB. Jangan tutup halaman selama proses berlangsung.
+      </p>
+    </section>
+  </form>
+
+  <p class="note">Client: Yoruuta LRCLIB Publisher prototype · API: <code>https://lrclib.net/api</code></p>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const API = "https://lrclib.net/api";
+  const SERVER_PUBLISH_ROUTE = "/api/lrclib-publish";
+  const CLIENT_HEADER = "Yoruuta LRCLIB Publisher/1.0 (https://yoruuta.vercel.app)";
+  const form = document.getElementById("publishForm");
+  const statusBox = document.getElementById("status");
+  const statusText = document.getElementById("statusText");
+  const progress = document.getElementById("progress");
+  const publishBtn = document.getElementById("publishBtn");
+  const checkBtn = document.getElementById("checkBtn");
+  const matchesBox = document.getElementById("matches");
+  const lrcFile = document.getElementById("lrcFile");
+  const lrcFileStatus = document.getElementById("lrcFileStatus");
+
+  function setStatus(message, kind = "idle", busy = false) {
+    statusBox.dataset.kind = kind;
+    statusText.textContent = message;
+    progress.style.display = busy ? "block" : "none";
+    publishBtn.disabled = busy;
+    checkBtn.disabled = busy;
+  }
+
+  function headers() {
+    // Browser tidak mengizinkan aplikasi mengatur User-Agent secara langsung.
+    // LRCLIB menerima Lrclib-Client sebagai alternatif.
+    return { "Lrclib-Client": CLIENT_HEADER };
+  }
+
+  async function readResponse(response) {
+    const raw = await response.text();
+    let data;
+    try { data = raw ? JSON.parse(raw) : {}; }
+    catch { data = { message: raw || response.statusText }; }
+    if (!response.ok) {
+      const retry = response.headers.get("Retry-After");
+      let message = data.message || data.error || response.statusText || "Request gagal";
+      if (response.status === 429 && retry) message += ` (coba lagi setelah ${retry} detik)`;
+      throw new Error(`HTTP ${response.status}: ${message}`);
+    }
+    return data;
+  }
+
+  function values() {
+    return {
+      trackName: document.getElementById("trackName").value.trim(),
+      artistName: document.getElementById("artistName").value.trim(),
+      albumName: document.getElementById("albumName").value.trim(),
+      duration: Number(document.getElementById("duration").value),
+      plainLyrics: document.getElementById("plainLyrics").value.trim(),
+      syncedLyrics: document.getElementById("syncedLyrics").value.trim()
+    };
+  }
+
+  function validate(data) {
+    if (!data.trackName || !data.artistName || !data.albumName) {
+      throw new Error("Judul lagu, artis, dan album wajib diisi.");
+    }
+    if (!Number.isFinite(data.duration) || data.duration <= 0) {
+      throw new Error("Durasi harus berupa angka lebih besar dari 0 detik.");
+    }
+    if (!data.plainLyrics && !data.syncedLyrics) {
+      throw new Error("Isi plain lyrics atau synced lyrics terlebih dahulu.");
+    }
+    if (data.syncedLyrics) {
+      const lines = data.syncedLyrics.split(/\r?\n/).filter(line => line.trim());
+      const invalid = lines.find(line => !/^\[\d{1,3}:\d{2}(?:\.\d{1,3})?\]/.test(line.trim()));
+      if (invalid) throw new Error("Format LRC tidak valid. Baris harus diawali timestamp seperti [00:12.34].");
+    }
+  }
+
+  function plainFromLrc(lrc) {
+    return lrc.split(/\r?\n/)
+      .map(line => line.replace(/^\s*(?:\[\d{1,3}:\d{2}(?:\.\d{1,3})?\])+/g, "").trim())
+      .filter(Boolean).join("\n");
+  }
+
+  function parseLrcTime(value) {
+    const match = value.trim().match(/^(\d{1,3}):(\d{2})(?:\.(\d{1,3}))?$/);
+    if (!match) return null;
+    const fraction = (match[3] || "0").padEnd(3, "0");
+    return Number(match[1]) * 60 + Number(match[2]) + Number(fraction) / 1000;
+  }
+
+  function parseLrcFile(text) {
+    const metadata = {};
+    const syncedLines = [];
+    const timestampPattern = /^\s*(?:\[\d{1,3}:\d{2}(?:\.\d{1,3})?\])+.*$/;
+    const metadataPattern = /^\s*\[([^:\]]+):([^\]]*)\]\s*$/;
+
+    for (const line of text.replace(/^\uFEFF/, "").split(/\r?\n/)) {
+      const metadataMatch = line.match(metadataPattern);
+      if (metadataMatch && !/^\d{1,3}:\d{2}(?:\.\d{1,3})?$/.test(metadataMatch[1])) {
+        metadata[metadataMatch[1].trim().toLowerCase()] = metadataMatch[2].trim();
+        continue;
+      }
+      if (timestampPattern.test(line)) syncedLines.push(line.trim());
+    }
+
+    if (!syncedLines.length) throw new Error("File LRC tidak memiliki baris dengan timestamp yang valid.");
+    return { metadata, syncedLyrics: syncedLines.join("\n") };
+  }
+
+  function applyLrcMetadata(metadata) {
+    const fields = {
+      ti: document.getElementById("trackName"),
+      ar: document.getElementById("artistName"),
+      al: document.getElementById("albumName")
+    };
+    for (const [key, field] of Object.entries(fields)) {
+      if (!field.value.trim() && metadata[key]) field.value = metadata[key];
+    }
+    if (!document.getElementById("duration").value && metadata.length) {
+      const duration = parseLrcTime(metadata.length);
+      if (duration && duration > 0) document.getElementById("duration").value = duration;
+    }
+  }
+
+  function compareBytes(a, b) {
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] < b[i]) return -1;
+      if (a[i] > b[i]) return 1;
+    }
+    return 0;
+  }
+
+  function hexToBytes(hex) {
+    if (!/^[0-9a-f]{64}$/i.test(hex)) throw new Error("Target challenge bukan SHA-256 hex yang valid.");
+    return Uint8Array.from(hex.match(/.{2}/g), byte => parseInt(byte, 16));
+  }
+
+  async function sha256(text) {
+    const bytes = new TextEncoder().encode(text);
+    return new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+  }
+
+  async function solveChallenge(prefix, targetHex) {
+    if (!crypto.subtle) throw new Error("Web Crypto tidak tersedia. Buka halaman melalui HTTPS atau localhost.");
+    const target = hexToBytes(targetHex);
+    let nonce = 0;
+    const started = Date.now();
+
+    // Yield ke browser secara berkala agar UI tetap responsif.
+    while (true) {
+      const digest = await sha256(prefix + String(nonce));
+      if (compareBytes(digest, target) <= 0) return String(nonce);
+      nonce++;
+
+      if (nonce % 256 === 0) {
+        const seconds = Math.floor((Date.now() - started) / 1000);
+        setStatus(`Menyelesaikan Proof of Work… ${nonce.toLocaleString("id-ID")} percobaan · ${seconds} detik`, "working", true);
+      }
+      if (nonce % 1024 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    }
+  }
+
+  async function requestChallenge() {
+    const response = await fetch(`${API}/request-challenge`, {
+      method: "POST",
+      headers: headers()
+    });
+    const challenge = await readResponse(response);
+    if (!challenge.prefix || !challenge.target) {
+      throw new Error("Respons challenge tidak memiliki prefix atau target.");
+    }
+    return challenge;
+  }
+
+  async function publishDirect(data) {
+    setStatus("Meminta challenge dari LRCLIB…", "working", true);
+    const challenge = await requestChallenge();
+    setStatus("Challenge diterima. Menghitung SHA-256 Proof of Work…", "working", true);
+    const nonce = await solveChallenge(challenge.prefix, challenge.target);
+    const publishToken = `${challenge.prefix}:${nonce}`;
+
+    setStatus("Proof of Work selesai. Mengirim lirik ke LRCLIB…", "working", true);
+    const response = await fetch(`${API}/publish`, {
+      method: "POST",
+      headers: {
+        ...headers(),
+        "Content-Type": "application/json",
+        "X-Publish-Token": publishToken
+      },
+      body: JSON.stringify(data)
+    });
+    const result = response.status === 201 ? null : await readResponse(response);
+    return { response, result };
+  }
+
+  async function publishViaServer(data) {
+    setStatus("Mengirim publikasi melalui server-side API route…", "working", true);
+    const response = await fetch(SERVER_PUBLISH_ROUTE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    const result = response.status === 201 ? null : await readResponse(response);
+    return { response, result };
+  }
+
+  async function publish(data) {
+    try {
+      return await publishDirect(data);
+    } catch (error) {
+      const message = String(error?.message || error);
+      if (!SERVER_PUBLISH_ROUTE || !/Failed to fetch|CORS/i.test(message)) throw error;
+      setStatus("Akses langsung ditolak (CORS). Mencoba server-side API route…", "working", true);
+      return await publishViaServer(data);
+    }
+  }
+
+  async function searchDuplicates() {
+    const data = values();
+    if (!data.trackName) throw new Error("Isi judul lagu terlebih dahulu.");
+    const params = new URLSearchParams({
+      track_name: data.trackName,
+      artist_name: data.artistName,
+      album_name: data.albumName
+    });
+    setStatus("Mencari kemungkinan duplikasi…", "working", true);
+    matchesBox.replaceChildren();
+
+    const response = await fetch(`${API}/search?${params}`, { headers: headers() });
+    const results = await readResponse(response);
+    publishBtn.disabled = false;
+    checkBtn.disabled = false;
+    progress.style.display = "none";
+
+    if (!Array.isArray(results) || results.length === 0) {
+      matchesBox.textContent = "Tidak ditemukan hasil yang cocok. Ini bukan jaminan lagu belum pernah dipublikasikan.";
+      setStatus("Pencarian selesai: tidak ditemukan hasil.", "success");
+      return;
+    }
+
+    const heading = document.createElement("p");
+    heading.className = "hint";
+    heading.textContent = `Ditemukan ${results.length} kemungkinan hasil. Periksa sebelum mengirim revisi atau publikasi baru.`;
+    matchesBox.appendChild(heading);
+
+    results.slice(0, 8).forEach(item => {
+      const card = document.createElement("div");
+      card.className = "match";
+      const title = document.createElement("strong");
+      title.textContent = `${item.trackName || "Unknown track"} — ${item.artistName || "Unknown artist"}`;
+      const detail = document.createElement("small");
+      detail.textContent = `${item.albumName || "Unknown album"} · ${item.duration ?? "?"} detik · ID ${item.id ?? "?"}`;
+      card.append(title, detail);
+      if (item.id != null) {
+        const link = document.createElement("div");
+        const anchor = document.createElement("a");
+        anchor.href = `https://lrclib.net/api/get/${encodeURIComponent(item.id)}`;
+        anchor.target = "_blank";
+        anchor.rel = "noopener noreferrer";
+        anchor.textContent = "Lihat record API";
+        link.appendChild(anchor);
+        card.appendChild(link);
+      }
+      matchesBox.appendChild(card);
+    });
+    setStatus("Pencarian selesai. Tinjau hasil di atas sebelum memublikasikan.", "success");
+  }
+
+  checkBtn.addEventListener("click", async () => {
+    try { await searchDuplicates(); }
+    catch (error) { setStatus(error.message, "error"); }
+  });
+
+  lrcFile.addEventListener("change", async () => {
+    const file = lrcFile.files[0];
+    if (!file) return;
+    try {
+      if (!file.name.toLowerCase().endsWith(".lrc")) throw new Error("Pilih file dengan ekstensi .lrc.");
+      const parsed = parseLrcFile(await file.text());
+      document.getElementById("syncedLyrics").value = parsed.syncedLyrics;
+      document.getElementById("plainLyrics").value = plainFromLrc(parsed.syncedLyrics);
+      applyLrcMetadata(parsed.metadata);
+      lrcFileStatus.textContent = `${file.name} berhasil dibaca. Synced lyrics dan plain lyrics terisi.`;
+      setStatus("File LRC berhasil dimuat. Periksa metadata dan lirik sebelum publikasi.", "success");
+    } catch (error) {
+      lrcFileStatus.textContent = error.message;
+      setStatus(error.message, "error");
+    }
+  });
+
+  document.getElementById("deriveBtn").addEventListener("click", () => {
+    const lrc = document.getElementById("syncedLyrics").value;
+    document.getElementById("plainLyrics").value = plainFromLrc(lrc);
+  });
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    let challenge;
+    try {
+      const data = values();
+      validate(data);
+
+      if (!confirm("Publikasikan lirik ini ke database publik LRCLIB? Pastikan metadata, lirik, dan hak publikasinya sudah diperiksa.")) return;
+
+      const { response, result } = await publish(data);
+      setStatus(`Berhasil dipublikasikan! HTTP ${response.status}.${result == null ? "" : `\nRespons: ${JSON.stringify(result, null, 2)}`}`, "success");
+    } catch (error) {
+      setStatus(`${error.message}\n\nJika muncul pesan Failed to fetch atau CORS, coba jalankan proses publikasi melalui server-side API route.`, "error");
+    }
+  });
+
+  form.addEventListener("reset", () => {
+    matchesBox.replaceChildren();
+    lrcFileStatus.textContent = "Pilih file .lrc untuk mengisi synced lyrics dan plain lyrics otomatis.";
+    setTimeout(() => setStatus("Form direset. Siap menerima data lagu baru.", "idle"), 0);
+  });
+})();
+</script>
+</body>
+</html>
