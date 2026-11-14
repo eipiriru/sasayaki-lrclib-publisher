@@ -4,7 +4,7 @@
 import crypto from "node:crypto";
 
 const LRCLIB_API = "https://lrclib.net/api";
-const LRCLIB_CLIENT = "Yoruuta LRCLIB Publisher/1.0 (https://yoruuta.vercel.app)";
+const LRCLIB_CLIENT = "Sasayaki LRCLIB Publisher/1.0 (https://sasayaki-lrc-publisher.vercel.app)";
 
 function compareBytes(a, b) {
   for (let i = 0; i < a.length; i++) {
