@@ -1,5 +1,9 @@
 {
     "outputDirectory": "public",
-    "cleanUrls": true,
-    "trailingSlash": false
+    "rewrites": [
+      { "source": "/api/lrclib-publish", "destination": "/api/lrclib-publish" }
+    ],
+    "routes": [
+      { "src": "/", "dest": "/index.html" }
+    ]
   }
