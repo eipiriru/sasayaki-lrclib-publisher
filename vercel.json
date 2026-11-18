@@ -1,5 +1,7 @@
 {
+  "cleanUrls": true,
   "rewrites": [
-    { "source": "/api/lrclib-publish", "destination": "/api/index" }
+    { "source": "/api/lrclib-publish", "destination": "/api/index" },
+    { "source": "/lrclib-publisher.html", "destination": "/" }
   ]
 }
