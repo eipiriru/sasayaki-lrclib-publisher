@@ -20,6 +20,7 @@ Web tool untuk memublikasikan plain lyrics dan synced lyrics (LRC) ke [LRCLIB](h
 .
 ├── api/lrclib-publish/route.js  # Route POST untuk Next.js/Vercel
 ├── lrclib-publisher.html        # UI browser
+├── public/                      # Logo, favicon, dan ikon statis
 ├── server-proxy.mjs             # LRCLIB challenge, PoW, dan publish client
 ├── server.mjs                   # Server lokal Node.js
 ├── package.json

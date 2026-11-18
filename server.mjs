@@ -6,12 +6,32 @@ import { publishToLrclib } from "./server-proxy.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3000);
+const STATIC_FILES = new Map([
+  ["/", ["lrclib-publisher.html", "text/html; charset=utf-8"]],
+  ["/lrclib-publisher.html", ["lrclib-publisher.html", "text/html; charset=utf-8"]],
+  ["/favicon.ico", ["public/favicon.ico", "image/x-icon"]],
+  ["/favicon-32.png", ["public/favicon-32.png", "image/png"]],
+  ["/apple-touch-icon.png", ["public/apple-touch-icon.png", "image/png"]],
+  ["/logo.png", ["public/logo.png", "image/png"]]
+]);
 
 const server = http.createServer(async (req, res) => {
-  if (req.method === "GET" && (req.url === "/" || req.url === "/lrclib-publisher.html")) {
-    const file = fs.readFileSync(path.join(__dirname, "lrclib-publisher.html"));
-    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    return res.end(file);
+  const pathname = new URL(req.url || "/", "http://localhost").pathname;
+  if ((req.method === "GET" || req.method === "HEAD") && STATIC_FILES.has(pathname)) {
+    const [relativePath, contentType] = STATIC_FILES.get(pathname);
+    const filePath = path.join(__dirname, relativePath);
+    if (!fs.existsSync(filePath)) {
+      res.writeHead(404, { "Content-Type": "text/plain" });
+      return res.end("Not Found");
+    }
+    const stat = fs.statSync(filePath);
+    res.writeHead(200, {
+      "Content-Type": contentType,
+      "Content-Length": stat.size,
+      "Cache-Control": contentType.startsWith("image/") ? "public, max-age=86400" : "no-cache"
+    });
+    if (req.method === "HEAD") return res.end();
+    return fs.createReadStream(filePath).pipe(res);
   }
 
   if (req.method === "POST" && req.url === "/api/lrclib-publish") {

@@ -4,78 +4,117 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sasayaki LRCLIB Publisher</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
   :root {
     color-scheme: dark;
-    --bg: #0b1020; --panel: #121a2e; --panel2: #18233b;
-    --text: #edf2ff; --muted: #9aa8c3; --line: #293752;
-    --accent: #8b9cff; --accent2: #6578f5; --good: #45d6a0;
-    --warn: #f5c56b; --bad: #ff7e8a;
+    --bg: #07111f; --panel: #102033; --panel2: #173049;
+    --text: #f4efe4; --muted: #b7c3d4; --line: #3d5368;
+    --accent: #d6b15a; --accent2: #8fb7d6; --good: #7dcaa8;
+    --warn: #e2c27a; --bad: #e08b86; --ink: #102033;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; min-height: 100vh; padding: 36px 18px;
-    background: radial-gradient(ellipse at 15% 0%, #1a2850 0, transparent 42%), var(--bg);
+    background:
+      radial-gradient(ellipse at 12% -10%, rgba(214,177,90,.18), transparent 34%),
+      radial-gradient(ellipse at 88% 0%, rgba(143,183,214,.16), transparent 32%),
+      var(--bg);
     color: var(--text); font: 15px/1.55 system-ui, -apple-system, Segoe UI, sans-serif;
   }
-  .wrap { max-width: 900px; margin: auto; }
-  header { margin-bottom: 24px; }
+  .snow {
+    position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0;
+  }
+  .falling-note {
+    position: absolute; top: -12vh; color: rgba(244,239,228,.72);
+    text-shadow: 0 0 12px rgba(214,177,90,.18);
+    animation: fall linear infinite;
+    will-change: transform;
+  }
+  @keyframes fall {
+    from { transform: translate3d(0, -12vh, 0) rotate(0deg); }
+    to { transform: translate3d(var(--drift), 112vh, 0) rotate(var(--spin)); }
+  }
+  .wrap { position: relative; z-index: 1; max-width: 900px; margin: auto; }
+  header { display: flex; gap: 18px; align-items: center; margin-bottom: 24px; }
+  .logo {
+    width: 92px; height: 92px; flex: 0 0 92px; border-radius: 24px;
+    background: radial-gradient(circle at 50% 42%, #173049, #07111f 72%);
+    border: 1px solid rgba(214,177,90,.45); box-shadow: 0 12px 34px rgba(0,0,0,.28);
+  }
   .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .14em; font-size: 11px; font-weight: 800; }
   h1 { margin: 7px 0 5px; font-size: clamp(28px, 5vw, 40px); letter-spacing: -.04em; }
   .sub { color: var(--muted); margin: 0; max-width: 680px; }
   .card {
-    background: linear-gradient(160deg, rgba(24,35,59,.96), rgba(18,26,46,.98));
+    background: linear-gradient(160deg, rgba(23,48,73,.94), rgba(16,32,51,.96));
     border: 1px solid var(--line); border-radius: 18px; padding: 22px;
-    box-shadow: 0 18px 55px rgba(0,0,0,.22); margin: 16px 0;
+    box-shadow: 0 18px 55px rgba(0,0,0,.24); margin: 16px 0;
   }
   .section-title { font-size: 16px; margin: 0 0 16px; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .field { min-width: 0; }
   .field.full { grid-column: 1 / -1; }
-  label { display: block; font-size: 13px; font-weight: 700; margin: 0 0 7px; color: #dce5ff; }
+  label { display: block; font-size: 13px; font-weight: 700; margin: 0 0 7px; color: #f7f1e4; }
   input, textarea {
-    width: 100%; border: 1px solid #34435f; border-radius: 10px;
-    background: #0d1528; color: var(--text); padding: 11px 12px;
+    width: 100%; border: 1px solid #4c6278; border-radius: 10px;
+    background: #091524; color: var(--text); padding: 11px 12px;
     font: inherit; outline: none; transition: border .15s, box-shadow .15s;
   }
-  input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,156,255,.13); }
+  input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(214,177,90,.16); }
   textarea { min-height: 170px; resize: vertical; font: 13px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; }
   .hint { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
   .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
   button {
     border: 0; border-radius: 10px; padding: 11px 16px; cursor: pointer;
-    color: #0b1020; background: var(--accent); font: 700 14px system-ui;
+    color: var(--ink); background: var(--accent); font: 700 14px system-ui;
     transition: transform .12s, opacity .12s, background .12s;
   }
-  button:hover:not(:disabled) { transform: translateY(-1px); background: #aab6ff; }
-  button.secondary { background: #293752; color: var(--text); }
-  button.secondary:hover:not(:disabled) { background: #354766; }
+  button:hover:not(:disabled) { transform: translateY(-1px); background: #e4c77d; }
+  button.secondary { background: #24384d; color: var(--text); }
+  button.secondary:hover:not(:disabled) { background: #314b64; }
   button:disabled { opacity: .45; cursor: not-allowed; }
-  .status { display: flex; gap: 10px; align-items: flex-start; padding: 13px 14px; border-radius: 11px; background: #0d1528; border: 1px solid var(--line); }
+  .status { display: flex; gap: 10px; align-items: flex-start; padding: 13px 14px; border-radius: 11px; background: #091524; border: 1px solid var(--line); }
   .dot { width: 9px; height: 9px; flex: 0 0 9px; margin-top: 6px; border-radius: 50%; background: var(--muted); }
   .status[data-kind="working"] .dot { background: var(--warn); box-shadow: 0 0 0 4px rgba(245,197,107,.12); }
   .status[data-kind="success"] .dot { background: var(--good); }
   .status[data-kind="error"] .dot { background: var(--bad); }
   #statusText { white-space: pre-wrap; overflow-wrap: anywhere; }
   #matches { margin-top: 12px; }
-  .match { padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; margin-top: 8px; background: rgba(13,21,40,.7); }
+  .match { padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; margin-top: 8px; background: rgba(9,21,36,.72); }
   .match strong { display: block; }
   .match small { color: var(--muted); }
   .match a { color: var(--accent); font-size: 12px; }
-  .progress { height: 5px; background: #26334c; border-radius: 99px; overflow: hidden; margin-top: 12px; display: none; }
+  .progress { height: 5px; background: #24384d; border-radius: 99px; overflow: hidden; margin-top: 12px; display: none; }
   .progress > div { height: 100%; width: 35%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite alternate; }
   @keyframes pulse { from { transform: translateX(-70%); } to { transform: translateX(220%); } }
   .note { color: var(--muted); font-size: 12px; margin-top: 18px; }
-  code { color: #c8d1ff; background: #0d1528; padding: 2px 5px; border-radius: 5px; }
-  @media (max-width: 650px) { body { padding: 24px 12px; } .card { padding: 16px; } .grid { grid-template-columns: 1fr; } .field.full { grid-column: auto; } }
+  code { color: #f4e7c4; background: #091524; padding: 2px 5px; border-radius: 5px; }
+  @media (max-width: 650px) {
+    body { padding: 24px 12px; }
+    header { align-items: flex-start; }
+    .logo { width: 72px; height: 72px; flex-basis: 72px; border-radius: 18px; }
+    .card { padding: 16px; }
+    .grid { grid-template-columns: 1fr; }
+    .field.full { grid-column: auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .falling-note { animation: none; display: none; }
+    .progress > div { animation: none; }
+  }
 </style>
 </head>
 <body>
+<div class="snow" id="snow" aria-hidden="true"></div>
 <div class="wrap">
   <header>
-    <div class="eyebrow">Community lyrics contribution</div>
-    <h1>Sasayaki LRCLIB Publisher</h1>
-    <p class="sub">Publikasikan plain lyrics dan timestamped LRC ke database LRCLIB. Tidak membutuhkan akun atau API key.</p>
+    <img class="logo" src="/logo.png" width="92" height="92" alt="Lambang Sasayaki: buku terbuka dan not musik">
+    <div>
+      <div class="eyebrow">Community lyrics contribution</div>
+      <h1>Sasayaki LRCLIB Publisher</h1>
+      <p class="sub">Publikasikan plain lyrics dan timestamped LRC ke database LRCLIB. Tidak membutuhkan akun atau API key.</p>
+    </div>
   </header>
 
   <form id="publishForm">
@@ -153,6 +192,21 @@
 <script>
 (() => {
   "use strict";
+
+  const snow = document.getElementById("snow");
+  const notes = ["♩", "♪", "♫", "♬", "♭"];
+  for (let i = 0; i < 28; i++) {
+    const note = document.createElement("span");
+    note.className = "falling-note";
+    note.textContent = notes[i % notes.length];
+    note.style.left = `${(i * 37) % 100}%`;
+    note.style.fontSize = `${14 + (i % 5) * 6}px`;
+    note.style.animationDuration = `${11 + (i % 8) * 1.7}s`;
+    note.style.animationDelay = `${-(i % 12) * 1.1}s`;
+    note.style.setProperty("--drift", `${((i % 7) - 3) * 18}px`);
+    note.style.setProperty("--spin", `${((i % 2) ? 1 : -1) * (18 + (i % 5) * 12)}deg`);
+    snow.appendChild(note);
+  }
 
   const API = "https://lrclib.net/api";
   const SERVER_PUBLISH_ROUTE = "/api/lrclib-publish";
