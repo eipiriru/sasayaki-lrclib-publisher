@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/lrclib-publisher.html" }
+  ]
+}
