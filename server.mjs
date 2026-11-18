@@ -2,13 +2,14 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { publishToLrclib } from "./server-proxy.mjs";
+import { publishToLrclib, validatePublishPayload } from "./server-proxy.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3000);
 const STATIC_FILES = new Map([
-  ["/", ["lrclib-publisher.html", "text/html; charset=utf-8"]],
-  ["/lrclib-publisher.html", ["lrclib-publisher.html", "text/html; charset=utf-8"]],
+  ["/", ["public/index.html", "text/html; charset=utf-8"]],
+  ["/index.html", ["public/index.html", "text/html; charset=utf-8"]],
+  ["/lrclib-publisher.html", ["public/index.html", "text/html; charset=utf-8"]],
   ["/favicon.ico", ["public/favicon.ico", "image/x-icon"]],
   ["/favicon-32.png", ["public/favicon-32.png", "image/png"]],
   ["/apple-touch-icon.png", ["public/apple-touch-icon.png", "image/png"]],
@@ -34,12 +35,17 @@ const server = http.createServer(async (req, res) => {
     return fs.createReadStream(filePath).pipe(res);
   }
 
-  if (req.method === "POST" && req.url === "/api/lrclib-publish") {
+  if (req.method === "POST" && pathname === "/api/lrclib-publish") {
     let body = "";
     req.on("data", chunk => { body += chunk; });
     req.on("end", async () => {
       try {
         const payload = JSON.parse(body || "{}");
+        const validationError = validatePublishPayload(payload);
+        if (validationError) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          return res.end(JSON.stringify({ error: validationError }));
+        }
         const { status, result } = await publishToLrclib(payload);
         res.writeHead(status, result == null ? {} : { "Content-Type": "application/json" });
         res.end(result == null ? "" : JSON.stringify(result));
@@ -49,6 +55,11 @@ const server = http.createServer(async (req, res) => {
       }
     });
     return;
+  }
+
+  if (pathname === "/api/lrclib-publish") {
+    res.writeHead(405, { "Allow": "POST", "Content-Type": "application/json" });
+    return res.end(JSON.stringify({ error: "Method Not Allowed" }));
   }
 
   res.writeHead(404, { "Content-Type": "text/plain" });

@@ -1,4 +1,4 @@
-import { publishToLrclib } from "../server-proxy.mjs";
+import { publishToLrclib, validatePublishPayload } from "../server-proxy.mjs";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -10,6 +10,10 @@ export default async function handler(req, res) {
     const payload = typeof req.body === "string"
       ? JSON.parse(req.body || "{}")
       : req.body || {};
+
+    const validationError = validatePublishPayload(payload);
+    if (validationError) return res.status(400).json({ error: validationError });
+
     const { status, result } = await publishToLrclib(payload);
     if (result == null) return res.status(status).end();
     return res.status(status).json(result);

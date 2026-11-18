@@ -18,11 +18,16 @@ Web tool untuk memublikasikan plain lyrics dan synced lyrics (LRC) ke [LRCLIB](h
 
 ```text
 .
-├── api/lrclib-publish/route.js  # Route POST untuk Next.js/Vercel
-├── lrclib-publisher.html        # UI browser
-├── public/                      # Logo, favicon, dan ikon statis
+├── api/index.js                 # Vercel Node.js Serverless Function
+├── public/                      # Static assets dan UI
+│   ├── index.html               # UI browser
+│   ├── logo.png
+│   ├── favicon.ico
+│   ├── favicon-32.png
+│   └── apple-touch-icon.png
 ├── server-proxy.mjs             # LRCLIB challenge, PoW, dan publish client
 ├── server.mjs                   # Server lokal Node.js
+├── vercel.json                  # Routing Vercel
 ├── package.json
 ├── .env.example
 └── .gitignore
@@ -48,7 +53,19 @@ Buka:
 http://localhost:3000
 ```
 
-Jangan buka `lrclib-publisher.html` langsung dengan `file://`. Server lokal menyediakan route `/api/lrclib-publish` yang dipakai fallback publish.
+Jangan buka `public/index.html` langsung dengan `file://`. Server lokal menyediakan route `/api/lrclib-publish` yang dipakai fallback publish.
+
+## Deploy ke Vercel
+
+Import repository `eipiriru/sasayaki-lrclib-publisher` ke Vercel dengan:
+
+- Root Directory: `/`
+- Framework Preset: `Other`
+- Build Command: kosong
+- Output Directory: kosong
+- Production Branch: `main`
+
+Vercel melayani `public/index.html` sebagai halaman `/` dan `api/index.js` sebagai Serverless Function.
 
 Hentikan server dengan `Ctrl+C`.
 

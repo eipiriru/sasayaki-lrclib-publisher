@@ -24,6 +24,23 @@ function solveChallenge(prefix, targetHex) {
   }
 }
 
+export function validatePublishPayload(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return "Request body must be a JSON object";
+  if (!["trackName", "artistName", "albumName"].every(key => typeof payload[key] === "string" && payload[key].trim())) {
+    return "Track name, artist name, and album name are required";
+  }
+  if (!Number.isFinite(Number(payload.duration)) || Number(payload.duration) <= 0) {
+    return "Duration must be a number greater than 0 seconds";
+  }
+  if (!(typeof payload.plainLyrics === "string" && payload.plainLyrics.trim()) && !(typeof payload.syncedLyrics === "string" && payload.syncedLyrics.trim())) {
+    return "Plain lyrics or synced lyrics are required";
+  }
+  if (payload.syncedLyrics && payload.syncedLyrics.split(/\r?\n/).some(line => line.trim() && !/^\[\d{1,3}:\d{2}(?:\.\d{1,3})?\]/.test(line.trim()))) {
+    return "Synced lyrics contain an invalid timestamp line";
+  }
+  return null;
+}
+
 export async function publishToLrclib(payload) {
   const challengeRes = await fetch(`${LRCLIB_API}/request-challenge`, {
     method: "POST",
