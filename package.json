@@ -4,7 +4,6 @@
   "private": true,
   "description": "Minimal web publisher tool for LRCLIB with built-in server proxy to bypass browser CORS.",
   "type": "module",
-  "main": "server.mjs",
   "scripts": {
     "start": "node server.mjs",
     "test": "node server-proxy.mjs"
